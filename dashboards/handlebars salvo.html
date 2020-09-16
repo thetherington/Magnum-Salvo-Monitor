@@ -1,0 +1,224 @@
+<style>
+	table.fixed_header_salvo {
+		width: 100%;
+		table-layout: fixed;
+		border-collapse: collapse;
+		font-size: 90%;
+	}
+
+	tbody.fixed_header_salvo {
+		display: block;
+		width: 100%;
+		overflow: auto;
+		height: 700px;
+	}
+
+	.fixed_header_salvo thead tr {
+		display: block;
+	}
+
+	tr.fixed_header_salvo:nth-child(even) {
+		background-color: #22222275;
+	}
+
+	tr.fixed_header_salvo:hover {
+		border: 1px solid gray;
+	}
+
+	tr.fixed_header_salvo_red:hover {
+		border: 1px solid red;
+	}
+
+	tr.fixed_header_salvo_red:nth-child(even) {
+		background-color: #22222275;
+	}
+
+	.fixed_header_salvo thead {
+		background-color: #222222;
+	}
+
+	th.server,
+	td.server {
+		padding: 2px;
+		text-align: left;
+		width: 170px;
+	}
+
+	th.name,
+	td.name {
+		padding: 2px;
+		text-align: left;
+		width: 200px;
+	}
+
+	th.result,
+	td.result {
+		padding: 2px;
+		text-align: center;
+		width: 120px;
+	}
+
+	th.station,
+	td.station {
+		padding: 2px;
+		text-align: center;
+		width: 230px;
+	}
+
+	th.time,
+	td.time {
+		padding: 2px;
+		text-align: center;
+		width: 180px;
+	}
+
+	div.toolstip_salvo {
+		position: relative;
+		display: inline-block;
+	}
+
+	div.toolstip_salvo .tooltiptext_salvo {
+		visibility: hidden;
+		width: 180px;
+		background-color: #222222;
+		color: #fff;
+		text-align: center;
+		border-radius: 6px;
+		padding: 5px 0;
+		position: absolute;
+		z-index: 1;
+		top: 150%;
+		left: 50%;
+		margin-left: -60px;
+		font-size: 10px;
+	}
+
+	div.toolstip_salvo .tooltiptext_salvo::after {
+		content: "";
+		position: absolute;
+		bottom: 100%;
+		left: 50%;
+		margin-left: -35px;
+		border-width: 5px;
+		border-style: solid;
+		border-color: transparent transparent #222222 transparent;
+	}
+
+	div.toolstip_salvo:hover .tooltiptext_salvo {
+		visibility: visible;
+		opacity: 1;
+	}
+
+	div.errors {
+		height: 30px;
+		overflow: auto;
+		white-space: nowrap;
+		position: relative;
+	}
+</style>
+
+<table class="fixed_header_salvo">
+
+	<thead>
+		<tr>
+			<th class="server">Server</th>
+			<th class="name">Salvo</th>
+			<th class="result">Result</th>
+			<th class="station">Station</th>
+			<th class="time">Date</th>
+		</tr>
+	</thead>
+
+	<tbody class="fixed_header_salvo">
+
+		{{#each metrics}}
+
+		{{#compare metrics.2.value "success"}}
+		<tr class="fixed_header_salvo">
+			{{/compare}}
+
+			{{#compare metrics.2.value "failed"}}
+		<tr class="fixed_header_salvo_red">
+			{{/compare}}
+
+			<td class="server">
+
+				{{metrics.0.value}}
+
+			</td>
+
+			<td class="name">
+
+				{{metrics.1.value}}
+
+			</td>
+
+			<td class="result">
+
+				{{#compare metrics.2.value "failed"}}
+
+				<div class="toolstip_salvo">
+
+					<font color=red>{{metrics.2.value}}</font>
+
+					<span class="tooltiptext_salvo">
+
+						Issues: {{metrics.5.value}}
+
+						<div class="errors">
+							<font color=yellow>
+								{{#compare metrics.5.value ">" 1}}
+								{{#each metrics.8.raw}}
+								{{.}},
+								{{/each}}
+								{{/compare}}
+								{{#compare metrics.5.value "<" 2}}
+								{{metrics.8.value}}
+								{{/compare}}
+							</font>
+						</div>
+
+					</span>
+
+				</div>
+
+
+				{{/compare}}
+
+				{{#compare metrics.2.value "success"}}
+
+				{{metrics.2.value}}
+
+				{{/compare}}
+
+			</td>
+
+			<td class="station">
+
+				<div class="toolstip_salvo">
+
+					{{metrics.3.value}}
+
+					<span class="tooltiptext_salvo">
+
+						{{metrics.7.value}}
+
+					</span>
+
+				</div>
+
+			</td>
+
+			<td class="time">
+
+				{{metrics.4.value}}
+
+			</td>
+
+		</tr>
+
+		{{/each}}
+
+	</tbody>
+
+</table>
