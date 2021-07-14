@@ -2,6 +2,7 @@ import datetime
 import json
 import re
 import time
+import urllib.parse
 
 import requests
 
@@ -20,7 +21,18 @@ class salvo_mon:
             if "insite" in key and value:
 
                 self.insite = value
-                self.url = "http://{}:9200/log-syslog-*/_search/".format(value)
+
+                self.url = "http://%s:9200/%s,%s/_search/" % (
+                    self.insite,
+                    urllib.parse.quote(
+                        "<log-syslog-informational-{now/d}>,<log-syslog-{now/d}>",
+                        safe="",
+                    ),
+                    urllib.parse.quote(
+                        "<log-syslog-informational-{now/d-1d}>,<log-syslog-{now/d-1d}>",
+                        safe="",
+                    ),
+                )
 
             if "frequency" in key and value:
                 self.frequency = value
@@ -101,8 +113,10 @@ class salvo_mon:
         try:
 
             header = {"Content-Type": "application/json"}
+            params = {"ignore_unavailable": "true"}
 
-            response = requests.get(self.url, data=json.dumps(self.query), headers=header, timeout=30.0)
+            response = requests.get(self.url, data=json.dumps(self.query), params=params, headers=header, timeout=30.0)
+            response.close()
 
             return json.loads(response.text)
 
