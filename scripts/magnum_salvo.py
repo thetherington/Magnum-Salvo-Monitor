@@ -38,14 +38,58 @@ class salvo_mon:
             "size": 10000,
             "query": {
                 "bool": {
-                    "must": [
+                    "filter": [
                         {
-                            "query_string": {
-                                "default_field": "_all",
-                                "query": "syslog_program:triton* && salvo && (successful || failed)",
+                            "bool": {
+                                "filter": [
+                                    {
+                                        "bool": {
+                                            "should": [{"query_string": {"fields": ["process.name"], "query": "triton*"}}],
+                                            "minimum_should_match": 1,
+                                        }
+                                    },
+                                    {
+                                        "bool": {
+                                            "filter": [
+                                                {
+                                                    "bool": {
+                                                        "should": [{"match": {"log.syslog.message": "salvo"}}],
+                                                        "minimum_should_match": 1,
+                                                    }
+                                                },
+                                                {
+                                                    "bool": {
+                                                        "should": [
+                                                            {
+                                                                "bool": {
+                                                                    "should": [{"match": {"log.syslog.message": "successful"}}],
+                                                                    "minimum_should_match": 1,
+                                                                }
+                                                            },
+                                                            {
+                                                                "bool": {
+                                                                    "should": [{"match": {"log.syslog.message": "failed"}}],
+                                                                    "minimum_should_match": 1,
+                                                                }
+                                                            },
+                                                        ],
+                                                        "minimum_should_match": 1,
+                                                    }
+                                                },
+                                            ]
+                                        }
+                                    },
+                                ]
                             }
                         },
-                        {"range": {"@timestamp": {"from": "now-{}".format(self.frequency), "to": "now"}}},
+                        {
+                            "range": {
+                                "@timestamp": {
+                                    "from": "now-{}".format(self.frequency),
+                                    "to": "now",
+                                }
+                            }
+                        },
                     ]
                 }
             },
@@ -56,7 +100,9 @@ class salvo_mon:
 
         try:
 
-            response = requests.get(self.url, data=json.dumps(self.query), timeout=30.0)
+            header = {"Content-Type": "application/json"}
+
+            response = requests.get(self.url, data=json.dumps(self.query), headers=header, timeout=30.0)
 
             return json.loads(response.text)
 
@@ -83,40 +129,40 @@ class salvo_mon:
 
                     fields = {
                         "s_type": "salvo_monitor",
-                        "s_daemon": doc["syslog_program"],
-                        "s_magnum_name": doc["syslog_hostname"],
-                        "s_magnum_ip": doc["host"],
+                        "s_daemon": doc["process"]["name"],
+                        "s_magnum_name": doc["host"]["name"],
+                        "s_magnum_ip": doc["host"]["ip"],
                         "t_time": doc["@timestamp"],
                         "s_time_display": self.parse_date(doc["@timestamp"]),
                         "l_msg_id": self.message_id,
                     }
 
                     for room in self.room_list:
-                        if room in doc["syslog_hostname"]:
+                        if room in doc["host"]["name"]:
                             fields.update({"s_pcr": room})
 
-                    if "Salvo successful" in doc["syslog_message"]:
+                    if "Salvo successful" in doc["log"]["syslog"]["message"]:
 
                         fields.update({"s_result": "success"})
-                        fields.update(self.parse_success(doc["syslog_message"]))
+                        fields.update(self.parse_success(doc["log"]["syslog"]["message"]))
 
                         document = {
                             "fields": fields,
-                            "host": doc["syslog_hostname"],
-                            "name": "salvo_mon",
+                            "host": doc["host"]["name"],
+                            "name": "salvo",
                         }
 
                         documents.append(document)
 
-                    elif "Salvo failed" in doc["syslog_message"]:
+                    elif "Salvo failed" in doc["log"]["syslog"]["message"]:
 
                         fields.update({"s_result": "failed"})
-                        fields.update(self.parse_failure(doc["syslog_message"]))
+                        fields.update(self.parse_failure(doc["log"]["syslog"]["message"]))
 
                         document = {
                             "fields": fields,
-                            "host": doc["syslog_hostname"],
-                            "name": "salvo_mon",
+                            "host": doc["host"]["name"],
+                            "name": "salvo",
                         }
 
                         documents.append(document)
@@ -191,15 +237,17 @@ class salvo_mon:
 def main():
 
     params = {
-        "insite": "172.16.205.201",
-        "frequency": "2h",
+        "insite": "172.16.205.77",
+        "frequency": "5h",
         "annotate": {"module": "ThirtyRock_PROD_edge_def", "dict": "return_roomlist"},
     }
 
     collector = salvo_mon(**params)
 
+    resp = collector.collect()
     # print(json.dumps(collector.fetch(), indent=2))
-    print(json.dumps(collector.collect(), indent=2))
+    print(json.dumps(resp, indent=2))
+    print(len(resp))
 
 
 if __name__ == "__main__":
