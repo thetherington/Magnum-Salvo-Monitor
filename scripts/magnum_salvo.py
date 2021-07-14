@@ -45,11 +45,7 @@ class salvo_mon:
                                 "query": "syslog_program:triton* && salvo && (successful || failed)",
                             }
                         },
-                        {
-                            "range": {
-                                "@timestamp": {"from": "now-{}".format(self.frequency), "to": "now"}
-                            }
-                        },
+                        {"range": {"@timestamp": {"from": "now-{}".format(self.frequency), "to": "now"}}},
                     ]
                 }
             },
@@ -184,14 +180,7 @@ class salvo_mon:
 
                     except Exception:
 
-                        fields.update(
-                            {
-                                overrides[key]
-                                .replace("as", "s"): match.group(1)
-                                .replace("[", "")
-                                .replace("'", "")
-                            }
-                        )
+                        fields.update({overrides[key].replace("as", "s"): match.group(1).replace("[", "").replace("'", "")})
 
                 else:
                     fields.update({overrides[key]: match.group(1)})
