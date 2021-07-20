@@ -15,12 +15,13 @@ class Plugin(InsitePlugin):
 
         except Exception:
 
-            from ThirtyRock_PROD_edge_def import return_roomlist
+            # control room annotation file
+            # from ThirtyRock_PROD_edge_def import return_roomlist
 
             params = {
                 "insite": "172.16.205.201",
                 "frequency": "5m",
-                "annotate_db": return_roomlist(),
+                # "annotate_db": return_roomlist(),
             }
 
             self.collector = salvo_mon(**params)

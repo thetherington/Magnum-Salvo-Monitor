@@ -251,14 +251,15 @@ class salvo_mon:
 def main():
 
     params = {
-        "insite": "172.16.205.77",
+        "insite": "127.0.0.1",
         "frequency": "5h",
-        "annotate": {"module": "ThirtyRock_PROD_edge_def", "dict": "return_roomlist"},
+        # "annotate": {"module": "ThirtyRock_PROD_edge_def", "dict": "return_roomlist"},
     }
 
     collector = salvo_mon(**params)
 
     resp = collector.collect()
+
     # print(json.dumps(collector.fetch(), indent=2))
     print(json.dumps(resp, indent=2))
     print(len(resp))
