@@ -19,7 +19,7 @@ class Plugin(InsitePlugin):
             # from ThirtyRock_PROD_edge_def import return_roomlist
 
             params = {
-                "insite": "172.16.205.201",
+                "insite": hosts[-1],
                 "frequency": "5m",
                 # "annotate_db": return_roomlist(),
             }
